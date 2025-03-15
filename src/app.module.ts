@@ -1,9 +1,11 @@
+import { OpenaiService } from './openai.service';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CsvService } from './csv.service';
 
 @Module({
   imports: [
@@ -22,6 +24,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [OpenaiService, AppService, CsvService],
 })
 export class AppModule {}
