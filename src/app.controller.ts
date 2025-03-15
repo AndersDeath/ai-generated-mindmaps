@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Logger,
   Post,
   UploadedFile,
@@ -14,6 +16,7 @@ import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { parse } from 'csv-parse';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
+import { AxiosRequestConfig } from 'axios';
 
 interface UploadedFile {
   fieldname: string;
@@ -28,6 +31,15 @@ type CsvRow = {
   topic: string;
   subject: string;
 };
+
+interface AxiosResponse<T = any> {
+  data: T;
+  status: number;
+  statusText: string;
+  headers: any;
+  config: AxiosRequestConfig;
+  request?: any;
+}
 
 @Controller('api/v1')
 export class AppController {
@@ -116,7 +128,9 @@ ${JSON.stringify(mind_map_data_structure)}
 `;
 
     try {
-      const response = await lastValueFrom(
+      const response: AxiosResponse<{
+        choices: { message: { content: string } }[];
+      }> = await lastValueFrom(
         this.httpService.post(
           'https://api.openai.com/v1/chat/completions',
           {
@@ -132,13 +146,14 @@ ${JSON.stringify(mind_map_data_structure)}
           },
         ),
       );
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      console.log((response as any).data.choices[0].message.content);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      console.log(response.data.choices[0].message.content);
+      return response.data.choices[0].message.content;
     } catch (error) {
       this.logger.error('OpenAI API error', error);
-      throw new Error('Failed to generate mind map');
+      throw new HttpException(
+        'OpenAI API error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
     return this.appService.generate();
