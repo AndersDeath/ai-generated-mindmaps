@@ -3,13 +3,14 @@ import {
   Controller,
   Get,
   Logger,
+  Param,
   Post,
   Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiParam, ApiProperty } from '@nestjs/swagger';
 
 import { OpenaiService } from './services/openai.service';
 import { CsvService } from './services/csv.service';
@@ -20,6 +21,7 @@ import { Mindmap } from './entities/mindmaps.entity';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import { Response } from 'express';
+import { UUID } from 'crypto';
 interface UploadedFile {
   fieldname: string;
   originalname: string;
@@ -75,7 +77,7 @@ export class MindmapsController {
       mindmap: JSON.parse(a.mindmap) || '',
     }));
 
-    const saveResult = await this.mindmapService.save(
+    await this.mindmapService.save(
       test
         .filter((a) => a.status === 'Success')
         .map((a) => ({
@@ -84,7 +86,6 @@ export class MindmapsController {
           mindmap: a.mindmap,
         })) as unknown as Mindmap[],
     );
-    console.log(saveResult);
     const filePath = await this.csvService.generateCsv(
       test.map((a) => ({
         subject: a.subject,
@@ -107,20 +108,20 @@ export class MindmapsController {
   // @ApiResponse({ status: 500, description: 'Internal server error' })
   // async downloadCsv(@Res() res: Response) {}
 
-  @Get('callpoenai')
-  callopenai(): Promise<any> {
-    const subject = 'Biologie';
-    const topic = 'Populationsökologie, Lotka-Volterra-Regeln';
-    return this.openaiService.request(subject, topic);
-  }
-
   @Get('mindmaps')
   mindmaps() {
     return this.mindmapService.findAll();
   }
 
   @Get('mindmaps/:id')
-  mindmapsById(): string {
-    return 's';
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description:
+      'either an integer for the project id or a string for the project name',
+    schema: { oneOf: [{ type: 'string' }] },
+  })
+  mindmapsById(@Param() params: { id: string }) {
+    return this.mindmapService.findOne(params.id as UUID);
   }
 }

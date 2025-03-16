@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { parse } from 'csv-parse';
-import { write } from 'fast-csv';
+import { ParserRow, write } from 'fast-csv';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
 
@@ -54,7 +54,7 @@ export class CsvService {
     });
   }
 
-  generateCsv(data): Promise<string> {
+  generateCsv(data: ParserRow[]): Promise<string> {
     return new Promise((resolve) => {
       const filePath = join(__dirname, 'temp.csv');
       const writeStream = createWriteStream(filePath);

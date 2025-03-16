@@ -24,7 +24,7 @@ export class MindmapService {
     return this.mindmapRepository.findOneBy({ id });
   }
 
-  async remove(id: UUID): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.mindmapRepository.delete(id);
   }
 }
