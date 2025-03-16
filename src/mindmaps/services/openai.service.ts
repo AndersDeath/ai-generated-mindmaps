@@ -55,12 +55,14 @@ ${JSON.stringify(this.mindMapDataStructure)}
       subject: string;
       topic: string;
       mindmap: string;
+      status: string;
     }[]
   > {
     const results: {
       subject: string;
       topic: string;
       mindmap: string;
+      status: string;
     }[] = [];
 
     for (const param of params) {
@@ -69,6 +71,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
           subject: string;
           topic: string;
           mindmap: string;
+          status: string;
         } = await this.request(param.subject, param.topic);
         results.push(response);
       } catch (error) {
@@ -80,7 +83,6 @@ ${JSON.stringify(this.mindMapDataStructure)}
       }
 
       if (!delayMs) {
-        // Wait for the delay before the next request
         await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
@@ -99,35 +101,9 @@ ${JSON.stringify(this.mindMapDataStructure)}
   }> {
     try {
       const response = await this.client.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: this.buildPrompt(subject, topic) }],
       });
-
-      // await this.client.responses.create({
-      //   model: 'gpt-4o',
-      //   // instructions: 'You are a coding assistant that talks like a pirate',
-      //   input: this.buildPrompt(subject, topic),
-      // });
-      // console.log(response1.choices[0].message.content);
-
-      // const response: AxiosResponse<OpenAiResponse> = await lastValueFrom(
-      //   this.httpService.post(
-      //     'https://api.openai.com/v1/chat/completions',
-      //     {
-      //       model: 'gpt-3.5-turbo',
-      //       messages: [
-      //         { role: 'user', content: this.buildPrompt(subject, topic) },
-      //       ],
-      //       max_tokens: 500,
-      //     },
-      //     {
-      //       headers: {
-      //         Authorization: `Bearer ${this.apiKey}`,
-      //         'Content-Type': 'application/json',
-      //       },
-      //     },
-      //   ),
-      // );
       return {
         subject: subject,
         topic: topic,

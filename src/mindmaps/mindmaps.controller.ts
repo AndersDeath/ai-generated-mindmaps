@@ -75,12 +75,23 @@ export class MindmapsController {
       mindmap: JSON.parse(a.mindmap) || '',
     }));
 
-    await this.mindmapService.save(test as Mindmap[]);
-    // console.log(saveResult);
-    const filePath = await this.csvService.generateCsv([
-      { name: 'John Doe', email: 'john@example.com' },
-      { name: 'Jane Doe', email: 'jane@example.com' },
-    ]);
+    const saveResult = await this.mindmapService.save(
+      test
+        .filter((a) => a.status === 'Success')
+        .map((a) => ({
+          subject: a.subject,
+          topic: a.topic,
+          mindmap: a.mindmap,
+        })) as unknown as Mindmap[],
+    );
+    console.log(saveResult);
+    const filePath = await this.csvService.generateCsv(
+      test.map((a) => ({
+        subject: a.subject,
+        topic: a.topic,
+        status: a.status,
+      })),
+    );
 
     res.download(filePath, 'data.csv', (err: Error) => {
       if (err) {
