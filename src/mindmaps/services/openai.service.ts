@@ -42,7 +42,55 @@ ${JSON.stringify(this.mindMapDataStructure)}
 `;
   }
 
-  async request(subject: string, topic: string): Promise<string> {
+  async sendRequestsWithDelay(
+    params: { subject: string; topic: string }[],
+    delayMs?: number,
+  ): Promise<
+    {
+      subject: string;
+      topic: string;
+      mindmap: string;
+    }[]
+  > {
+    const results: {
+      subject: string;
+      topic: string;
+      mindmap: string;
+    }[] = [];
+
+    for (const param of params) {
+      try {
+        const response: {
+          subject: string;
+          topic: string;
+          mindmap: string;
+        } = await this.request(param.subject, param.topic);
+        results.push(response);
+      } catch (error) {
+        this.logger.error('OpenAI API error during bulk operation', error);
+        throw new HttpException(
+          'OpenAI API error during bulk operation',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      if (!delayMs) {
+        // Wait for the delay before the next request
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+
+    return results;
+  }
+
+  async request(
+    subject: string,
+    topic: string,
+  ): Promise<{
+    subject: string;
+    topic: string;
+    mindmap: string;
+  }> {
     try {
       const response: AxiosResponse<OpenAiResponse> = await lastValueFrom(
         this.httpService.post(
@@ -62,8 +110,11 @@ ${JSON.stringify(this.mindMapDataStructure)}
           },
         ),
       );
-      console.log(response.data.choices[0].message.content);
-      return response.data.choices[0].message.content;
+      return {
+        subject: subject,
+        topic: topic,
+        mindmap: response.data.choices[0].message.content,
+      };
     } catch (error) {
       this.logger.error('OpenAI API error', error);
       throw new HttpException(

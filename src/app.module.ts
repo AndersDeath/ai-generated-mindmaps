@@ -1,14 +1,12 @@
-import { OpenaiService } from './openai.service';
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CsvService } from './csv.service';
+import { MindmapsModule } from './mindmaps/mindmaps.module';
 
 @Module({
   imports: [
+    MindmapsModule,
     HttpModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
@@ -18,12 +16,11 @@ import { CsvService } from './csv.service';
       username: process.env.PG_USERNAME,
       password: process.env.PG_PASSWORD,
       database: process.env.PG_DATABASE,
-      entities: [],
       synchronize: true,
       autoLoadEntities: true,
     }),
   ],
-  controllers: [AppController],
-  providers: [OpenaiService, AppService, CsvService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
