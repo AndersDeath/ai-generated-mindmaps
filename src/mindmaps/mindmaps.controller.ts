@@ -9,12 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOperation,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 
 import { OpenaiService } from './services/openai.service';
 import { CsvService } from './services/csv.service';
@@ -23,7 +18,8 @@ import { MindmapService } from './services/mindmap.service';
 import { Mindmap } from './entities/mindmaps.entity';
 
 import { v4 as uuidv4 } from 'uuid';
-
+import fs from 'fs';
+import { Response } from 'express';
 interface UploadedFile {
   fieldname: string;
   originalname: string;
@@ -56,7 +52,7 @@ export class MindmapsController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  async generate(@UploadedFile() file: UploadedFile) {
+  async generate(@UploadedFile() file: UploadedFile, @Res() res: Response) {
     // TODO: Create file validator
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -76,19 +72,29 @@ export class MindmapsController {
       subject: a.subject,
       topic: a.topic,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      mindmap: JSON.parse(a.mindmap),
+      mindmap: JSON.parse(a.mindmap) || '',
     }));
 
     await this.mindmapService.save(test as Mindmap[]);
+    // console.log(saveResult);
+    const filePath = await this.csvService.generateCsv([
+      { name: 'John Doe', email: 'john@example.com' },
+      { name: 'Jane Doe', email: 'jane@example.com' },
+    ]);
+
+    res.download(filePath, 'data.csv', (err: Error) => {
+      if (err) {
+        throw new Error();
+      }
+      fs.unlinkSync(filePath);
+    });
   }
 
-  @Get('download')
-  @ApiOperation({ summary: 'Download a CSV file' })
-  @ApiResponse({ status: 200, description: 'CSV file downloaded successfully' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
-  downloadCsv(@Res() res: Response) {
-    return this.csvService.generateCsv(res);
-  }
+  // @Get('download')
+  // @ApiOperation({ summary: 'Download a CSV file' })
+  // @ApiResponse({ status: 200, description: 'CSV file downloaded successfully' })
+  // @ApiResponse({ status: 500, description: 'Internal server error' })
+  // async downloadCsv(@Res() res: Response) {}
 
   @Get('callpoenai')
   callopenai(): Promise<any> {

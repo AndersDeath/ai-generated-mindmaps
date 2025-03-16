@@ -4,7 +4,7 @@ import { parse } from 'csv-parse';
 import { write } from 'fast-csv';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
-import fs from 'fs';
+
 interface UploadedFile {
   fieldname: string;
   originalname: string;
@@ -54,25 +54,15 @@ export class CsvService {
     });
   }
 
-  generateCsv(res: any) {
-    const data = [
-      { name: 'John Doe', email: 'john@example.com' },
-      { name: 'Jane Doe', email: 'jane@example.com' },
-    ];
-
-    const filePath = join(__dirname, 'temp.csv');
-    const writeStream = createWriteStream(filePath);
-
-    write(data, { headers: true })
-      .pipe(writeStream)
-      .on('finish', () => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        res.download(filePath, 'data.csv', (err) => {
-          if (err) {
-            console.error('Error downloading file:', err);
-          }
-          fs.unlinkSync(filePath);
+  generateCsv(data): Promise<string> {
+    return new Promise((resolve) => {
+      const filePath = join(__dirname, 'temp.csv');
+      const writeStream = createWriteStream(filePath);
+      write(data, { headers: true })
+        .pipe(writeStream)
+        .on('finish', () => {
+          resolve(filePath);
         });
-      });
+    });
   }
 }

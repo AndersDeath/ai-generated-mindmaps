@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { AxiosRequestConfig } from 'axios';
 import { lastValueFrom } from 'rxjs';
+import OpenAI from 'openai';
 
 interface AxiosResponse<T = any> {
   data: T;
@@ -20,6 +21,10 @@ interface OpenAiResponse {
 export class OpenaiService {
   private readonly logger = new Logger(OpenaiService.name);
   private readonly apiKey = process.env.OPENAI_API_KEY;
+  private client = new OpenAI({
+    apiKey: this.apiKey,
+  });
+
   private readonly mindMapDataStructure = {
     subject: 'subject',
     topic: 'topic',
@@ -90,37 +95,53 @@ ${JSON.stringify(this.mindMapDataStructure)}
     subject: string;
     topic: string;
     mindmap: string;
+    status: string;
   }> {
     try {
-      const response: AxiosResponse<OpenAiResponse> = await lastValueFrom(
-        this.httpService.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-3.5-turbo',
-            messages: [
-              { role: 'user', content: this.buildPrompt(subject, topic) },
-            ],
-            max_tokens: 500,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${this.apiKey}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        ),
-      );
+      const response = await this.client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: this.buildPrompt(subject, topic) }],
+      });
+
+      // await this.client.responses.create({
+      //   model: 'gpt-4o',
+      //   // instructions: 'You are a coding assistant that talks like a pirate',
+      //   input: this.buildPrompt(subject, topic),
+      // });
+      // console.log(response1.choices[0].message.content);
+
+      // const response: AxiosResponse<OpenAiResponse> = await lastValueFrom(
+      //   this.httpService.post(
+      //     'https://api.openai.com/v1/chat/completions',
+      //     {
+      //       model: 'gpt-3.5-turbo',
+      //       messages: [
+      //         { role: 'user', content: this.buildPrompt(subject, topic) },
+      //       ],
+      //       max_tokens: 500,
+      //     },
+      //     {
+      //       headers: {
+      //         Authorization: `Bearer ${this.apiKey}`,
+      //         'Content-Type': 'application/json',
+      //       },
+      //     },
+      //   ),
+      // );
       return {
         subject: subject,
         topic: topic,
-        mindmap: response.data.choices[0].message.content,
+        mindmap: response.choices[0].message.content || '',
+        status: 'Success',
       };
     } catch (error) {
       this.logger.error('OpenAI API error', error);
-      throw new HttpException(
-        'OpenAI API error',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      return {
+        subject: subject,
+        topic: topic,
+        mindmap: '',
+        status: 'Failure',
+      };
     }
   }
 }
