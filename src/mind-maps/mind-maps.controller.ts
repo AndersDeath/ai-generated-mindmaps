@@ -15,7 +15,6 @@ import { ApiBody, ApiConsumes, ApiParam } from '@nestjs/swagger';
 import { OpenaiService } from './services/openai.service';
 import { CsvService } from './services/csv.service';
 import { MindMapService } from './services/mind-map.service';
-// import { MindmapService } from '../services/mindmap.service';
 import { MindMap } from './entities/mind-map.entity';
 
 import { v4 as uuidv4 } from 'uuid';

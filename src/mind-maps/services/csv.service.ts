@@ -14,11 +14,6 @@ interface UploadedFile {
   size: number;
 }
 
-// type CsvRow = {
-//   topic: string;
-//   subject: string;
-// };
-
 @Injectable()
 export class CsvService {
   constructor() {}

@@ -1,21 +1,28 @@
-import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-// import { AxiosRequestConfig } from 'axios';
-// import { lastValueFrom } from 'rxjs';
+
 import OpenAI from 'openai';
 
-// interface AxiosResponse<T = any> {
-//   data: T;
-//   status: number;
-//   statusText: string;
-//   headers: any;
-//   config: AxiosRequestConfig;
-//   request?: any;
-// }
+interface MindMapV1 {
+  subject: string;
+  topic: string;
+  schemaVersion: number;
+  dateCreate: string;
+  id: string;
+  subtopics: SubTopicV1[];
+}
 
-// interface OpenAiResponse {
-//   choices: { message: { content: string } }[]; // it covers only necessary part of the data structure that is important for the task
-// }
+interface SubTopicV1 {
+  name: string;
+  id: string;
+  subtopics?: SubTopicV1[];
+}
+
+interface MindMapOpenAIResponse {
+  subject: string;
+  topic: string;
+  mindMap: string;
+  status: string;
+}
 
 @Injectable()
 export class OpenaiService {
@@ -25,54 +32,47 @@ export class OpenaiService {
     apiKey: this.apiKey,
   });
 
-  private readonly mindMapDataStructure = {
+  private readonly mindMapModelV1: MindMapV1 = {
     subject: 'subject',
     topic: 'topic',
+    schemaVersion: 1,
+    dateCreate: 'ISO DateTime',
+    id: 'UUID',
     subtopics: [
       {
         name: 'name',
-        subtopics: [{ name: 'name' }, { name: 'name' }],
+        id: 'UUID',
+        subtopics: [
+          { name: 'name', id: 'UUID' },
+          { name: 'name', id: 'UUID' },
+        ],
       },
     ],
   };
 
-  constructor(private httpService: HttpService) {}
+  constructor() {}
 
   private buildPrompt(subject: string, topic: string): string {
     return `You are a professional teacher in ${subject}.
 Your goal is to generate a mind map for the subject above with the focus on the ${topic} so that a student can improve their understanding of ${subject} and ${topic} while using that mind map.
 The mind map should feature sub-topics of the ${topic}and no other content.
 The result of your work must be a mind map in the form of JSON using the following data structure:
-${JSON.stringify(this.mindMapDataStructure)}
+${JSON.stringify(this.mindMapModelV1)}
 `;
   }
 
   async sendRequestsWithDelay(
     params: { subject: string; topic: string }[],
     delayMs?: number,
-  ): Promise<
-    {
-      subject: string;
-      topic: string;
-      mindMap: string;
-      status: string;
-    }[]
-  > {
-    const results: {
-      subject: string;
-      topic: string;
-      mindMap: string;
-      status: string;
-    }[] = [];
+  ): Promise<MindMapOpenAIResponse[]> {
+    const results: MindMapOpenAIResponse[] = [];
 
     for (const param of params) {
       try {
-        const response: {
-          subject: string;
-          topic: string;
-          mindMap: string;
-          status: string;
-        } = await this.request(param.subject, param.topic);
+        const response: MindMapOpenAIResponse = await this.request(
+          param.subject,
+          param.topic,
+        );
         results.push(response);
       } catch (error) {
         this.logger.error('OpenAI API error during bulk operation', error);
@@ -93,12 +93,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
   async request(
     subject: string,
     topic: string,
-  ): Promise<{
-    subject: string;
-    topic: string;
-    mindMap: string;
-    status: string;
-  }> {
+  ): Promise<MindMapOpenAIResponse> {
     try {
       const response = await this.client.chat.completions.create({
         model: 'gpt-3.5-turbo',
