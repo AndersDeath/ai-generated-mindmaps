@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { MindmapsModule } from './mindmaps/mindmaps.module';
+import { MindMapsModule } from './mind-maps/mind-maps.module';
 
 @Module({
   imports: [
-    MindmapsModule,
+    MindMapsModule,
     HttpModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({

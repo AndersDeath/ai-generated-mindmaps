@@ -2,7 +2,7 @@ import { UUID } from 'crypto';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Mindmap {
+export class MindMap {
   @PrimaryGeneratedColumn('uuid')
   id: UUID;
 
@@ -13,5 +13,5 @@ export class Mindmap {
   topic: string;
 
   @Column('jsonb', { nullable: false, default: {} })
-  mindmap: any;
+  mindMap: any;
 }

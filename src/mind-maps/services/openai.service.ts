@@ -1,21 +1,21 @@
 import { HttpService } from '@nestjs/axios';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { AxiosRequestConfig } from 'axios';
-import { lastValueFrom } from 'rxjs';
+// import { AxiosRequestConfig } from 'axios';
+// import { lastValueFrom } from 'rxjs';
 import OpenAI from 'openai';
 
-interface AxiosResponse<T = any> {
-  data: T;
-  status: number;
-  statusText: string;
-  headers: any;
-  config: AxiosRequestConfig;
-  request?: any;
-}
+// interface AxiosResponse<T = any> {
+//   data: T;
+//   status: number;
+//   statusText: string;
+//   headers: any;
+//   config: AxiosRequestConfig;
+//   request?: any;
+// }
 
-interface OpenAiResponse {
-  choices: { message: { content: string } }[]; // it covers only necessary part of the data structure that is important for the task
-}
+// interface OpenAiResponse {
+//   choices: { message: { content: string } }[]; // it covers only necessary part of the data structure that is important for the task
+// }
 
 @Injectable()
 export class OpenaiService {
@@ -54,14 +54,14 @@ ${JSON.stringify(this.mindMapDataStructure)}
     {
       subject: string;
       topic: string;
-      mindmap: string;
+      mindMap: string;
       status: string;
     }[]
   > {
     const results: {
       subject: string;
       topic: string;
-      mindmap: string;
+      mindMap: string;
       status: string;
     }[] = [];
 
@@ -70,7 +70,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
         const response: {
           subject: string;
           topic: string;
-          mindmap: string;
+          mindMap: string;
           status: string;
         } = await this.request(param.subject, param.topic);
         results.push(response);
@@ -96,7 +96,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
   ): Promise<{
     subject: string;
     topic: string;
-    mindmap: string;
+    mindMap: string;
     status: string;
   }> {
     try {
@@ -107,7 +107,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
       return {
         subject: subject,
         topic: topic,
-        mindmap: response.choices[0].message.content || '',
+        mindMap: response.choices[0].message.content || '',
         status: 'Success',
       };
     } catch (error) {
@@ -115,7 +115,7 @@ ${JSON.stringify(this.mindMapDataStructure)}
       return {
         subject: subject,
         topic: topic,
-        mindmap: '',
+        mindMap: '',
         status: 'Failure',
       };
     }

@@ -10,13 +10,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiParam, ApiProperty } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiParam } from '@nestjs/swagger';
 
 import { OpenaiService } from './services/openai.service';
 import { CsvService } from './services/csv.service';
-import { MindmapService } from './services/mindmap.service';
+import { MindMapService } from './services/mind-map.service';
 // import { MindmapService } from '../services/mindmap.service';
-import { Mindmap } from './entities/mindmaps.entity';
+import { MindMap } from './entities/mind-map.entity';
 
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
@@ -31,13 +31,13 @@ interface UploadedFile {
   size: number;
 }
 @Controller('api/v1')
-export class MindmapsController {
-  private readonly logger = new Logger(MindmapsController.name);
+export class MindMapsController {
+  private readonly logger = new Logger(MindMapsController.name);
 
   constructor(
     private readonly openaiService: OpenaiService,
     private readonly csvService: CsvService,
-    private readonly mindmapService: MindmapService,
+    private readonly mindMapService: MindMapService,
   ) {}
 
   @Post('generate')
@@ -69,22 +69,22 @@ export class MindmapsController {
     const test = await this.openaiService.sendRequestsWithDelay(
       await this.csvService.parse(file),
     );
-    test.map((a: { subject: string; topic: string; mindmap: string }) => ({
+    test.map((a: { subject: string; topic: string; mindMap: string }) => ({
       id: uuidv4(),
       subject: a.subject,
       topic: a.topic,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      mindmap: JSON.parse(a.mindmap) || '',
+      mindMap: JSON.parse(a.mindMap) || '',
     }));
 
-    await this.mindmapService.save(
+    await this.mindMapService.save(
       test
         .filter((a) => a.status === 'Success')
         .map((a) => ({
           subject: a.subject,
           topic: a.topic,
-          mindmap: a.mindmap,
-        })) as unknown as Mindmap[],
+          mindMap: a.mindMap,
+        })) as unknown as MindMap[],
     );
     const filePath = await this.csvService.generateCsv(
       test.map((a) => ({
@@ -109,8 +109,8 @@ export class MindmapsController {
   // async downloadCsv(@Res() res: Response) {}
 
   @Get('mindmaps')
-  mindmaps() {
-    return this.mindmapService.findAll();
+  mindMaps() {
+    return this.mindMapService.findAll();
   }
 
   @Get('mindmaps/:id')
@@ -121,7 +121,7 @@ export class MindmapsController {
       'either an integer for the project id or a string for the project name',
     schema: { oneOf: [{ type: 'string' }] },
   })
-  mindmapsById(@Param() params: { id: string }) {
-    return this.mindmapService.findOne(params.id as UUID);
+  mindMapsById(@Param() params: { id: string }) {
+    return this.mindMapService.findOne(params.id as UUID);
   }
 }
