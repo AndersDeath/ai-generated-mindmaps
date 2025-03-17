@@ -83,7 +83,7 @@ export class MindMapsController {
           subject: a.subject,
           topic: a.topic,
           mindMap: a.mindMap,
-        })) as unknown as MindMap[],
+        })) as MindMap[],
     );
     const filePath = await this.csvService.generateCsv(
       test.map((a) => ({

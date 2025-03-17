@@ -19,6 +19,7 @@ export class CsvService {
   constructor() {}
 
   parse(file: UploadedFile): Promise<{ subject: string; topic: string }[]> {
+    // TODO: Rewrite parser to fast-csv
     return new Promise((resolve, reject) => {
       try {
         parse(
