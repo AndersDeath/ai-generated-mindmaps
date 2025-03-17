@@ -12,7 +12,7 @@ export class MindMapService {
     private readonly mindMapRepository: Repository<MindMap>,
   ) {}
 
-  save(mindMaps: MindMap[]): Promise<MindMap[]> {
+  save(mindMaps: Partial<MindMap>[]): Promise<MindMap[]> {
     return this.mindMapRepository.save(mindMaps);
   }
 
@@ -20,11 +20,11 @@ export class MindMapService {
     return this.mindMapRepository.find();
   }
 
-  findOne(id: UUID): Promise<MindMap | null> {
-    return this.mindMapRepository.findOneBy({ id });
+  findOne(uuid: UUID): Promise<MindMap | null> {
+    return this.mindMapRepository.findOneBy({ uuid });
   }
 
-  async remove(id: string): Promise<void> {
-    await this.mindMapRepository.delete(id);
+  async remove(uuid: string): Promise<void> {
+    await this.mindMapRepository.delete(uuid);
   }
 }

@@ -1,28 +1,12 @@
+import { createMindMapOpenAIResponseDto } from './../dto/create-mind-map-openai-response.dto';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 import OpenAI from 'openai';
-
-interface MindMapV1 {
-  subject: string;
-  topic: string;
-  schemaVersion: number;
-  dateCreate: string;
-  id: string;
-  subtopics: SubTopicV1[];
-}
-
-interface SubTopicV1 {
-  name: string;
-  id: string;
-  subtopics?: SubTopicV1[];
-}
-
-interface MindMapOpenAIResponse {
-  subject: string;
-  topic: string;
-  mindMap: string;
-  status: string;
-}
+import {
+  MIND_MAP_CREATION_STATUS,
+  MindMapOpenAIResponse,
+  MindMapV1,
+} from '../models/mind-map.model';
 
 @Injectable()
 export class OpenaiService {
@@ -32,32 +16,25 @@ export class OpenaiService {
     apiKey: this.apiKey,
   });
 
-  private readonly mindMapModelV1: MindMapV1 = {
-    subject: 'subject',
-    topic: 'topic',
-    schemaVersion: 1,
-    dateCreate: 'ISO DateTime',
-    id: 'UUID',
-    subtopics: [
-      {
-        name: 'name',
-        id: 'UUID',
-        subtopics: [
-          { name: 'name', id: 'UUID' },
-          { name: 'name', id: 'UUID' },
-        ],
-      },
-    ],
-  };
-
   constructor() {}
 
   private buildPrompt(subject: string, topic: string): string {
+    const mindMapModelV1: MindMapV1 = {
+      subject: 'subject',
+      topic: 'topic',
+      schemaVersion: 1,
+      subtopics: [
+        {
+          name: 'name',
+          subtopics: [{ name: 'name' }, { name: 'name' }],
+        },
+      ],
+    };
     return `You are a professional teacher in ${subject}.
 Your goal is to generate a mind map for the subject above with the focus on the ${topic} so that a student can improve their understanding of ${subject} and ${topic} while using that mind map.
 The mind map should feature sub-topics of the ${topic}and no other content.
 The result of your work must be a mind map in the form of JSON using the following data structure:
-${JSON.stringify(this.mindMapModelV1)}
+${JSON.stringify(mindMapModelV1)}
 `;
   }
 
@@ -99,20 +76,22 @@ ${JSON.stringify(this.mindMapModelV1)}
         model: 'gpt-3.5-turbo',
         messages: [{ role: 'user', content: this.buildPrompt(subject, topic) }],
       });
-      return {
+      return createMindMapOpenAIResponseDto({
         subject: subject,
         topic: topic,
-        mindMap: response.choices[0].message.content || '',
-        status: 'Success',
-      };
+        mindMap: JSON.parse(
+          response.choices[0].message.content || '{}',
+        ) as MindMapV1,
+        status: MIND_MAP_CREATION_STATUS.SUCCESS,
+      });
     } catch (error) {
       this.logger.error('OpenAI API error', error);
-      return {
+      return createMindMapOpenAIResponseDto({
         subject: subject,
         topic: topic,
-        mindMap: '',
-        status: 'Failure',
-      };
+        mindMap: null,
+        status: MIND_MAP_CREATION_STATUS.FAILURE,
+      });
     }
   }
 }

@@ -10,25 +10,24 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiParam } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+} from '@nestjs/swagger';
 
 import { OpenaiService } from './services/openai.service';
 import { CsvService } from './services/csv.service';
 import { MindMapService } from './services/mind-map.service';
 import { MindMap } from './entities/mind-map.entity';
-
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
 import { Response } from 'express';
 import { UUID } from 'crypto';
-interface UploadedFile {
-  fieldname: string;
-  originalname: string;
-  encoding: string;
-  mimetype: string;
-  buffer: Buffer;
-  size: number;
-}
+import { MIND_MAP_CREATION_STATUS } from './models/mind-map.model';
+import { createMindMapDto } from './dto/create-mind-map.dto';
+import { UploadedCsvFile } from './models/files.model';
+
 @Controller('api/v1')
 export class MindMapsController {
   private readonly logger = new Logger(MindMapsController.name);
@@ -40,6 +39,12 @@ export class MindMapsController {
   ) {}
 
   @Post('generate')
+  @ApiOperation({ summary: 'Upload CSV file for building mindmaps jsons' })
+  @ApiResponse({
+    status: 200,
+    description: 'CSV file uploaded and mindmaps generated successfully',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -53,8 +58,7 @@ export class MindMapsController {
     },
   })
   @UseInterceptors(FileInterceptor('file'))
-  async generate(@UploadedFile() file: UploadedFile, @Res() res: Response) {
-    // TODO: Create file validator
+  async generate(@UploadedFile() file: UploadedCsvFile, @Res() res: Response) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -64,63 +68,62 @@ export class MindMapsController {
         'Invalid file type. Only CSV files are allowed.',
       );
     }
+    const parseResult = await this.csvService.parse(file);
 
-    const test = await this.openaiService.sendRequestsWithDelay(
-      await this.csvService.parse(file),
-    );
-    test.map((a: { subject: string; topic: string; mindMap: string }) => ({
-      id: uuidv4(),
-      subject: a.subject,
-      topic: a.topic,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      mindMap: JSON.parse(a.mindMap) || '',
-    }));
+    const mindMapOpenAiResponses =
+      await this.openaiService.sendRequestsWithDelay(parseResult.results);
 
     await this.mindMapService.save(
-      test
-        .filter((a) => a.status === 'Success')
-        .map((a) => ({
-          subject: a.subject,
-          topic: a.topic,
-          mindMap: a.mindMap,
-        })) as MindMap[],
+      mindMapOpenAiResponses
+        .filter((a) => a.status === MIND_MAP_CREATION_STATUS.SUCCESS)
+        .map((a) => {
+          return createMindMapDto({
+            subject: a.subject,
+            topic: a.topic,
+            mindMap: a.mindMap,
+          } as MindMap);
+        }),
     );
+
     const filePath = await this.csvService.generateCsv(
-      test.map((a) => ({
+      mindMapOpenAiResponses.map((a) => ({
         subject: a.subject,
-        topic: a.topic,
         status: a.status,
       })),
     );
 
     res.download(filePath, 'data.csv', (err: Error) => {
       if (err) {
-        throw new Error();
+        throw new BadRequestException('Report cvs file generation failed', err);
       }
-      fs.unlinkSync(filePath);
     });
   }
 
-  // @Get('download')
-  // @ApiOperation({ summary: 'Download a CSV file' })
-  // @ApiResponse({ status: 200, description: 'CSV file downloaded successfully' })
-  // @ApiResponse({ status: 500, description: 'Internal server error' })
-  // async downloadCsv(@Res() res: Response) {}
-
   @Get('mindmaps')
+  @ApiOperation({ summary: 'Get all generated mindmaps' })
+  @ApiResponse({
+    status: 200,
+    description: 'All mindmaps where returned successfully',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   mindMaps() {
     return this.mindMapService.findAll();
   }
 
-  @Get('mindmaps/:id')
+  @Get('mindmaps/:uuid')
+  @ApiOperation({ summary: 'Get generated mindmap by uuid' })
+  @ApiResponse({
+    status: 200,
+    description: 'All mindmaps where returned successfully',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiParam({
-    name: 'id',
+    name: 'uuid',
     required: true,
-    description:
-      'either an integer for the project id or a string for the project name',
+    description: 'uuid of the mindmap',
     schema: { oneOf: [{ type: 'string' }] },
   })
-  mindMapsById(@Param() params: { id: string }) {
-    return this.mindMapService.findOne(params.id as UUID);
+  mindMapsById(@Param() params: { uuid: string }) {
+    return this.mindMapService.findOne(params.uuid as UUID);
   }
 }
