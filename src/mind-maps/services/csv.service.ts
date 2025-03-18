@@ -27,8 +27,8 @@ export class CsvService {
           .on('error', (error) => reject(error))
           .on('data', async (row: CsvRowDto) => {
             const rowDto = plainToInstance(CsvRowDto, row);
-
             const validationErrors = await validate(rowDto);
+
             if (validationErrors.length > 0) {
               errors.push(
                 `Row ${JSON.stringify(row)} is invalid: ${validationErrors.reduce((acc: string, error: ValidationError) => acc + ' ' + error.toString() || '', '')}`,
