@@ -126,4 +126,15 @@ export class MindMapsController {
   mindMapsById(@Param() params: { uuid: string }) {
     return this.mindMapService.findOne(params.uuid as UUID);
   }
+
+  @Get('health')
+  @ApiOperation({ summary: 'Service Health Check' })
+  @ApiResponse({
+    status: 200,
+    description: 'Service works fine',
+  })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  healthCheck() {
+    return { status: 'ok' };
+  }
 }
