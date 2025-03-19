@@ -60,3 +60,4 @@ pgdata
 deploy_secrets.sh
 
 temp
+cloud-sql-proxy

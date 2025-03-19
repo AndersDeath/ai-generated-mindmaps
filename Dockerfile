@@ -8,7 +8,6 @@ RUN npm install --only=production
 
 COPY . .
 
-
 RUN npm install -g @nestjs/cli
 
 RUN npm run build
