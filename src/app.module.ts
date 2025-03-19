@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MindMapsModule } from './mind-maps/mind-maps.module';
@@ -7,7 +6,6 @@ import { MindMapsModule } from './mind-maps/mind-maps.module';
 @Module({
   imports: [
     MindMapsModule,
-    HttpModule,
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
