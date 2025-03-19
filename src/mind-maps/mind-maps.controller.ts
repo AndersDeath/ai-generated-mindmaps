@@ -44,6 +44,10 @@ export class MindMapsController {
     status: 200,
     description: 'CSV file uploaded and mindmaps generated successfully',
   })
+  @ApiResponse({
+    status: 201,
+    description: 'CSV output report file',
+  })
   @ApiResponse({ status: 500, description: 'Internal server error' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
