@@ -87,7 +87,7 @@ The application is designed as microservice that gets csv file and generates min
 ```
 It supports versioning, you can find data models in mind-map.model.ts file.
 
-2. DB structure
+3. DB structure
 
 There is one table in Database, the entity is in mind-map.entity.ts file.
 
