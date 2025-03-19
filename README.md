@@ -1,5 +1,19 @@
 # AI Generated Mind Maps
 
+# Table of Contents
+
+- [AI Generated Mind Maps](#ai-generated-mind-maps)
+  - [Preface](#preface)
+  - [Installation](#installation)
+  - [Run](#run)
+  - [Setting up pgAdmin and PostgreSQL Server](#setting-up-pgadmin-and-postgresql-server)
+  - [Application](#application)
+    - [API Documentation](#api-documentation)
+    - [Mindmap Data Structure](#mindmap-data-structure)
+    - [Database Structure](#database-structure)
+  - [Test Tasks Related Note (Future Steps)](#test-tasks-related-note-future-steps)
+  - [Google Cloud Notes](#google-cloud-notes)
+
 ## Preface
 
 The application is based on:
