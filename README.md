@@ -71,15 +71,38 @@ The application is designed as microservice that gets csv file and generates min
   ]
 }
 ```
-
 It supports versioning, you can find data models in mind-map.model.ts file.
+
+2. DB structure
+
+There is one table in Database, the entity is in mind-map.entity.ts file.
+
+```typescript
+@Entity()
+export class MindMap {
+  @PrimaryGeneratedColumn('uuid')
+  uuid: UUID;
+
+  @Column()
+  subject: string;
+
+  @Column()
+  topic: string;
+
+  @Column('jsonb', { nullable: false, default: {} })
+  mindMap: any;
+
+  @Column({ type: 'timestamptz', default: () => 'NOW()' })
+  dataCreate?: Date;
+}
+```
 
 ## Test tasks related note (future steps)
 
 1. I wrote some tests but didn't have time for all of them. I would cover the application at least on 70%-80%.
 2. I would expand documentation and work more on error handling. I provided a couple of example in the task but it's not enough for production. The same is about logging.
 
-## Google cloud notes
+## Google cloud Notes
 
 I could not run the application on google cloud because I could not build it properly. I didn't have enough time to debug this. Howevers I would like to describe what I did.
 
